@@ -64,6 +64,7 @@ import java.util.stream.Stream;
 
 import static io.strimzi.api.kafka.model.topic.ReplicasChangeState.ONGOING;
 import static io.strimzi.api.kafka.model.topic.ReplicasChangeState.PENDING;
+import static io.strimzi.operator.topic.TopicOperatorConfig.UNALTERABLE_TOPIC_CONFIG;
 import static io.strimzi.operator.topic.TopicOperatorUtil.topicNames;
 
 /**
@@ -1157,6 +1158,15 @@ public class BatchingTopicController {
                 alterConfigOps.removeIf(op -> !alterablePropertySet.contains(op.configEntry().name()));
             }
         }
+
+        var unalterableConfigs = config.unalterableTopicConfig();
+        if (unalterableConfigs != null && alterConfigOps != null && !unalterableConfigs.isEmpty()) {
+            if (!unalterableConfigs.equalsIgnoreCase("NONE")) {
+                var unalterablePropertySet = Arrays.stream(unalterableConfigs.replaceAll("\\s", "").split(","))
+                        .collect(Collectors.toSet());
+                alterConfigOps.removeIf(op -> unalterablePropertySet.contains(op.configEntry().name()));
+            }
+        }
     }
 
     private static boolean hasConfig(KafkaTopic kt) {
@@ -1186,6 +1196,7 @@ public class BatchingTopicController {
                                                List<Condition> conditions) {
         var readOnlyConfigs = new ArrayList<>();
         var alterableConfigs = config.alterableTopicConfig();
+        var unalterableConfigs = config.unalterableTopicConfig();
 
         if (reconcilableTopic != null && reconcilableTopic.kt() != null
               && hasConfig(reconcilableTopic.kt()) && alterableConfigs != null) {
@@ -1196,6 +1207,16 @@ public class BatchingTopicController {
                       .collect(Collectors.toSet());
                 reconcilableTopic.kt().getSpec().getConfig().forEach((key, value) -> {
                     if (!alterablePropertySet.contains(key)) {
+                        readOnlyConfigs.add(key);
+                    }
+                });
+            }
+
+            if (!unalterableConfigs.equalsIgnoreCase("NONE")) {
+                var unalterablePropertySet = Arrays.stream(unalterableConfigs.replaceAll("\\s", "").split(","))
+                        .collect(Collectors.toSet());
+                reconcilableTopic.kt().getSpec().getConfig().forEach((key, value) -> {
+                    if (unalterablePropertySet.contains(key)) {
                         readOnlyConfigs.add(key);
                     }
                 });
