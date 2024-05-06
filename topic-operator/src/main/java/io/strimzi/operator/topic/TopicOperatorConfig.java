@@ -168,6 +168,12 @@ public record TopicOperatorConfig(
         Map<String, Object> generatedMap = ConfigParameter.define(envMap, CONFIG_VALUES);
 
         TopicOperatorConfig topicOperatorConfig = new TopicOperatorConfig(generatedMap);
+        if (!ALTERABLE_TOPIC_CONFIG.defaultValue().equals(topicOperatorConfig.alterableTopicConfig()) && !UNALTERABLE_TOPIC_CONFIG.defaultValue().equals(topicOperatorConfig.unalterableTopicConfig())) {
+            LOGGER.warnOp("{} and {} have non-default values. {}}: {}; {}} {}",
+                    ALTERABLE_TOPIC_CONFIG.key(), UNALTERABLE_TOPIC_CONFIG.key(),
+                    ALTERABLE_TOPIC_CONFIG.key(), topicOperatorConfig.alterableTopicConfig(),
+                    UNALTERABLE_TOPIC_CONFIG.key(), topicOperatorConfig.unalterableTopicConfig());
+        }
         LOGGER.infoOp("TopicOperator configuration is {}", topicOperatorConfig);
         return topicOperatorConfig;
     }
