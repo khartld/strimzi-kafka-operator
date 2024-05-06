@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.strimzi.operator.topic;
-    
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.kroxylicious.testing.kafka.api.KafkaCluster;
@@ -1235,7 +1235,7 @@ class TopicControllerIT {
                 useFinalizer,
                 100, 100, 10, false,
                 false, false, "", 9090, false, false, "", "", "",
-                "all", "none" , false);
+                "all", "none", false);
     }
 
     @ParameterizedTest
@@ -1989,7 +1989,7 @@ class TopicControllerIT {
                 true,
                 1, 100, 5_0000, false,
                 false, false, "", 9090, false, false, "", "", "",
-                "all", "none" , false);
+                "all", "none", false);
 
         maybeStartOperator(config);
 
