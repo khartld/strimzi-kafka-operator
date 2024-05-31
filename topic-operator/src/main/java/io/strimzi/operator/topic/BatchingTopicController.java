@@ -1210,27 +1210,31 @@ public class BatchingTopicController {
         var unalterableConfigs = config.unalterableTopicConfig();
 
         if (reconcilableTopic != null && reconcilableTopic.kt() != null
-              && hasConfig(reconcilableTopic.kt()) && alterableConfigs != null) {
-            if (alterableConfigs.equalsIgnoreCase("NONE")) {
-                reconcilableTopic.kt().getSpec().getConfig().forEach((key, value) -> readOnlyConfigs.add(key));
-            } else if (!alterableConfigs.equalsIgnoreCase("ALL") && !alterableConfigs.isBlank()) {
-                var alterablePropertySet = Arrays.stream(alterableConfigs.replaceAll("\\s", "").split(","))
-                      .collect(Collectors.toSet());
-                reconcilableTopic.kt().getSpec().getConfig().forEach((key, value) -> {
-                    if (!alterablePropertySet.contains(key)) {
-                        readOnlyConfigs.add(key);
-                    }
-                });
+              && hasConfig(reconcilableTopic.kt())) {
+            if ( alterableConfigs != null) {
+                if (alterableConfigs.equalsIgnoreCase("NONE")) {
+                    reconcilableTopic.kt().getSpec().getConfig().forEach((key, value) -> readOnlyConfigs.add(key));
+                } else if (!alterableConfigs.equalsIgnoreCase("ALL") && !alterableConfigs.isBlank()) {
+                    var alterablePropertySet = Arrays.stream(alterableConfigs.replaceAll("\\s", "").split(","))
+                            .collect(Collectors.toSet());
+                    reconcilableTopic.kt().getSpec().getConfig().forEach((key, value) -> {
+                        if (!alterablePropertySet.contains(key)) {
+                            readOnlyConfigs.add(key);
+                        }
+                    });
+                }
             }
 
-            if (!unalterableConfigs.equalsIgnoreCase("NONE")) {
-                var unalterablePropertySet = Arrays.stream(unalterableConfigs.replaceAll("\\s", "").split(","))
-                        .collect(Collectors.toSet());
-                reconcilableTopic.kt().getSpec().getConfig().forEach((key, value) -> {
-                    if (unalterablePropertySet.contains(key)) {
-                        readOnlyConfigs.add(key);
-                    }
-                });
+            if (unalterableConfigs != null) {
+                if (!unalterableConfigs.equalsIgnoreCase("NONE")) {
+                    var unalterablePropertySet = Arrays.stream(unalterableConfigs.replaceAll("\\s", "").split(","))
+                            .collect(Collectors.toSet());
+                    reconcilableTopic.kt().getSpec().getConfig().forEach((key, value) -> {
+                        if (unalterablePropertySet.contains(key)) {
+                            readOnlyConfigs.add(key);
+                        }
+                    });
+                }
             }
         }
 
