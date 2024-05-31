@@ -63,6 +63,8 @@ import java.util.stream.Stream;
 
 import static io.strimzi.api.kafka.model.topic.ReplicasChangeState.ONGOING;
 import static io.strimzi.api.kafka.model.topic.ReplicasChangeState.PENDING;
+import static io.strimzi.operator.topic.TopicOperatorConfig.ALTERABLE_TOPIC_CONFIG;
+import static io.strimzi.operator.topic.TopicOperatorConfig.UNALTERABLE_TOPIC_CONFIG;
 import static io.strimzi.operator.topic.TopicOperatorUtil.startReconciliationTimer;
 import static io.strimzi.operator.topic.TopicOperatorUtil.stopReconciliationTimer;
 import static io.strimzi.operator.topic.TopicOperatorUtil.topicNames;
@@ -1236,6 +1238,13 @@ public class BatchingTopicController {
                     });
                 }
             }
+        }
+
+        if (!ALTERABLE_TOPIC_CONFIG.defaultValue().equals(alterableConfigs) && !UNALTERABLE_TOPIC_CONFIG.defaultValue().equals(unalterableConfigs)) {
+            LOGGER.warnOp("{} and {} have non-default values. {}}: {}; {}} {}",
+                    ALTERABLE_TOPIC_CONFIG.key(), UNALTERABLE_TOPIC_CONFIG.key(),
+                    ALTERABLE_TOPIC_CONFIG.key(), alterableConfigs,
+                    UNALTERABLE_TOPIC_CONFIG.key(), unalterableConfigs);
         }
 
         if (!readOnlyConfigs.isEmpty()) {
