@@ -2,11 +2,13 @@
  * Copyright Strimzi authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.strimzi.operator.cluster;
+package io.strimzi.operator.common.featuregates;
 
 import io.strimzi.operator.common.InvalidConfigurationException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.Arrays.asList;
 
@@ -16,11 +18,9 @@ import static java.util.Arrays.asList;
 public class FeatureGates {
     /* test */ static final FeatureGates NONE = new FeatureGates("");
 
-    private static final String USE_KRAFT = "UseKRaft";
     private static final String CONTINUE_ON_MANUAL_RU_FAILURE = "ContinueReconciliationOnManualRollingUpdateFailure";
 
-    // When adding new feature gates, do not forget to add them to allFeatureGates() and toString() methods
-    private final FeatureGate useKRaft = new FeatureGate(USE_KRAFT, true);
+    // When adding new feature gates, do not forget to add them to allFeatureGates(), toString(), equals(), and `hashCode() methods
     private final FeatureGate continueOnManualRUFailure =
         new FeatureGate(CONTINUE_ON_MANUAL_RU_FAILURE, false);
 
@@ -44,9 +44,6 @@ public class FeatureGates {
                 featureGate = featureGate.substring(1);
 
                 switch (featureGate) {
-                    case USE_KRAFT:
-                        setValueOnlyOnce(useKRaft, value);
-                        break;
                     case CONTINUE_ON_MANUAL_RU_FAILURE:
                         setValueOnlyOnce(continueOnManualRUFailure, value);
                         break;
@@ -84,13 +81,6 @@ public class FeatureGates {
     }
 
     /**
-     * @return  Returns true when the UseKRaft feature gate is enabled
-     */
-    public boolean useKRaftEnabled() {
-        return useKRaft.isEnabled();
-    }
-
-    /**
      * @return  Returns true when the ContinueReconciliationOnManualRollingUpdateFailure feature gate is enabled
      */
     public boolean continueOnManualRUFailureEnabled() {
@@ -103,18 +93,51 @@ public class FeatureGates {
      * @return  List of all Feature Gates
      */
     /*test*/ List<FeatureGate> allFeatureGates()  {
-        return List.of(
-                useKRaft,
-            continueOnManualRUFailure
-        );
+        return List.of(continueOnManualRUFailure);
     }
 
     @Override
     public String toString() {
         return "FeatureGates(" +
-                "UseKRaft=" + useKRaft.isEnabled() +
                 "ContinueReconciliationOnManualRollingUpdateFailure=" + continueOnManualRUFailure.isEnabled() +
                 ")";
+    }
+
+    /**
+     * @return  Generates the value for the environment variable that can be passed to the other operators to configure
+     *          the feature gates exactly as they are set in this instance.
+     */
+    public String toEnvironmentVariable()   {
+        List<String> gateSettings = new ArrayList<>();
+
+        for (FeatureGate gate : allFeatureGates())  {
+            if (gate.isEnabledByDefault() && !gate.isEnabled()) {
+                // It is enabled by default but it is disabled now => we need to disable it
+                gateSettings.add("-" + gate.getName());
+            } else if (!gate.isEnabledByDefault() && gate.isEnabled()) {
+                // It is disabled by default but it is enabled now => we need to disable it
+                gateSettings.add("+" + gate.getName());
+            }
+        }
+
+        return String.join(",", gateSettings);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)  {
+            return true;
+        } else if (o == null || getClass() != o.getClass()) {
+            return false;
+        } else {
+            FeatureGates other = (FeatureGates) o;
+            return Objects.equals(continueOnManualRUFailure, other.continueOnManualRUFailure);
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(continueOnManualRUFailure);
     }
 
     /**
@@ -171,6 +194,23 @@ public class FeatureGates {
          */
         public boolean isEnabledByDefault() {
             return defaultValue;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)  {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
+            } else {
+                FeatureGate other = (FeatureGate) o;
+                return defaultValue == other.defaultValue && Objects.equals(name, other.name) && Objects.equals(value, other.value);
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, defaultValue, value);
         }
     }
 }

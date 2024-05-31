@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.strimzi.operator.common.InvalidConfigurationException;
 import io.strimzi.operator.common.ReconciliationLogger;
 import io.strimzi.operator.common.config.ConfigParameter;
+import io.strimzi.operator.common.featuregates.FeatureGates;
 import io.strimzi.operator.common.model.Labels;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.common.config.SaslConfigs;
@@ -28,6 +29,7 @@ import static io.strimzi.operator.common.config.ConfigParameterParser.LABEL_PRED
 import static io.strimzi.operator.common.config.ConfigParameterParser.LONG;
 import static io.strimzi.operator.common.config.ConfigParameterParser.NON_EMPTY_STRING;
 import static io.strimzi.operator.common.config.ConfigParameterParser.STRING;
+import static io.strimzi.operator.common.config.ConfigParameterParser.parseFeatureGates;
 import static io.strimzi.operator.common.config.ConfigParameterParser.strictlyPositive;
 
 /**
@@ -91,6 +93,7 @@ public record TopicOperatorConfig(
         int maxBatchSize,
         long maxBatchLingerMs,
         boolean enableAdditionalMetrics,
+        FeatureGates featureGates,
         boolean cruiseControlEnabled,
         boolean cruiseControlRackEnabled,
         String cruiseControlHostname,
@@ -135,6 +138,7 @@ public record TopicOperatorConfig(
     static final ConfigParameter<String> ALTERABLE_TOPIC_CONFIG = new ConfigParameter<>("STRIMZI_ALTERABLE_TOPIC_CONFIG", STRING, "ALL", CONFIG_VALUES);
     static final ConfigParameter<String> UNALTERABLE_TOPIC_CONFIG = new ConfigParameter<>("STRIMZI_UNALTERABLE_TOPIC_CONFIG", STRING, "NONE", CONFIG_VALUES);
     static final ConfigParameter<Boolean> SKIP_CLUSTER_CONFIG_REVIEW = new ConfigParameter<>("STRIMZI_SKIP_CLUSTER_CONFIG_REVIEW", BOOLEAN, "false", CONFIG_VALUES);
+    static final ConfigParameter<FeatureGates> FEATURE_GATES = new ConfigParameter<>("STRIMZI_FEATURE_GATES", parseFeatureGates(), "", CONFIG_VALUES);
 
     // Cruise Control integration
     static final ConfigParameter<Boolean> CRUISE_CONTROL_ENABLED = new ConfigParameter<>("STRIMZI_CRUISE_CONTROL_ENABLED", BOOLEAN, "false", CONFIG_VALUES);
@@ -206,6 +210,7 @@ public record TopicOperatorConfig(
                 get(map, MAX_BATCH_SIZE),
                 get(map, MAX_BATCH_LINGER_MS),
                 get(map, ENABLE_ADDITIONAL_METRICS),
+                get(map, FEATURE_GATES),
                 get(map, CRUISE_CONTROL_ENABLED),
                 get(map, CRUISE_CONTROL_RACK_ENABLED),
                 get(map, CRUISE_CONTROL_HOSTNAME),
@@ -371,6 +376,7 @@ public record TopicOperatorConfig(
                 "\n\tmaxBatchSize=" + maxBatchSize +
                 "\n\tmaxBatchLingerMs=" + maxBatchLingerMs +
                 "\n\tenableAdditionalMetrics=" + enableAdditionalMetrics +
+                "\n\tfeatureGates='" + featureGates + "'" +
                 "\n\tcruiseControlEnabled=" + cruiseControlEnabled +
                 "\n\tcruiseControlRackEnabled=" + cruiseControlRackEnabled +
                 "\n\tcruiseControlHostname=" + cruiseControlHostname +

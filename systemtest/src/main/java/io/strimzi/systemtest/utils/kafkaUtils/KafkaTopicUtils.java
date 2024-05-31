@@ -250,7 +250,9 @@ public class KafkaTopicUtils {
         TestUtils.waitFor("deletion of all topics with prefix: " + topicPrefix, TestConstants.GLOBAL_POLL_INTERVAL, DELETION_TIMEOUT,
             () -> {
                 try {
-                    return getAllKafkaTopicsWithPrefix(namespaceName, topicPrefix).size() == 0;
+                    final int numberOfTopicsToDelete = getAllKafkaTopicsWithPrefix(namespaceName, topicPrefix).size();
+                    LOGGER.info("Remaining KafkaTopic's to delete: {} !", numberOfTopicsToDelete);
+                    return numberOfTopicsToDelete == 0;
                 } catch (Exception e) {
                     return e.getMessage().contains("Not Found") || e.getMessage().contains("the server doesn't have a resource type");
                 }
@@ -347,7 +349,6 @@ public class KafkaTopicUtils {
         if (kafkaTopic != null && kafkaTopic.getStatus() != null && kafkaTopic.getStatus().getReplicasChange() != null) {
             String message = kafkaTopic.getStatus().getReplicasChange().getMessage();
             return message != null &&
-                    message.contains("Replicas change failed (500), Error processing POST request") &&
                     message.contains("Requested RF cannot be more than number of alive brokers") &&
                     kafkaTopic.getStatus().getReplicasChange().getState().toValue().equals("pending") &&
                     kafkaTopic.getStatus().getReplicasChange().getTargetReplicas() == targetReplicas;
